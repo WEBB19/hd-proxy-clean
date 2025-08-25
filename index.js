@@ -1,37 +1,30 @@
-const express = require('express');
-const axios = require('axios');
+import express from "express";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+
+dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-
-const API_KEY = process.env.API_KEY;
-const HD_API_URL = 'https://app.humandesign.ai/api/v1/chart';
-
-const fetchChart = async (body) => {
-  const response = await axios.post(HD_API_URL, body, {
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  return response.data;
-};
-
-app.get('/', (req, res) => {
-  res.send('HD Proxy API él!');
-});
-
-app.post('/type', async (req, res) => {
+app.post("/getChart", async (req, res) => {
+  const { date, time, location } = req.body;
   try {
-    const data = await fetchChart(req.body);
-    res.json({ type: data.type });
+    const response = await fetch("https://api.humandesign.ai/chart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.HD_API_KEY}`
+      },
+      body: JSON.stringify({ date, time, location })
+    });
+
+    const data = await response.json();
+    res.json(data);
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ error: 'Nem sikerült lekérni a típust.' });
+    res.status(500).json({ error: "Hiba történt az API hívás során." });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`HD proxy API listening on port ${PORT}`);
+app.listen(10000, () => {
+  console.log("HD proxy API listening on port 10000");
 });
